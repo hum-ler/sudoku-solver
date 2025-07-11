@@ -19,7 +19,7 @@ fn main() -> Result<()> {
     let args = Args::parse();
 
     let puzzle = read_to_puzzle(args.input_file)?;
-    let solution = solve(puzzle).ok_or(anyhow!("No solution."))?;
+    let solution = solve_any(puzzle).ok_or(anyhow!("No solution."))?;
 
     if args.plain_output {
         print_solution(solution);

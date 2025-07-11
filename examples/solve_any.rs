@@ -1,6 +1,6 @@
 use anyhow::{Result, anyhow};
 
-use sudoku_solver::prelude::{print_solution_with_border, solve};
+use sudoku_solver::prelude::{print_solution_with_border, solve_any};
 
 fn main() -> Result<()> {
     // Create a simple puzzle, which is a [[u8; 9]; 9] grid. Use 0 to represent blanks.
@@ -17,7 +17,7 @@ fn main() -> Result<()> {
     ];
 
     // Solve the puzzle and print the solution out.
-    let solution = solve(puzzle).ok_or(anyhow!("No solution."))?;
+    let solution = solve_any(puzzle).ok_or(anyhow!("No solution."))?;
     print_solution_with_border(solution);
 
     Ok(())

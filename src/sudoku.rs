@@ -7,8 +7,24 @@ type Grid = [[u8; 9]; 9];
 pub type Puzzle = Grid;
 pub type Solution = Grid;
 
+/// Finds all solutions to the given puzzle, if any.
+pub fn solve(puzzle: Puzzle) -> Vec<Solution> {
+    if !is_valid_puzzle(puzzle) {
+        return vec![];
+    }
+
+    let blanks = blanks(puzzle);
+    if blanks.is_empty() {
+        return vec![puzzle];
+    }
+
+    let mut solutions = Vec::new();
+    find_solutions(puzzle, 0, &blanks, &mut solutions);
+    solutions
+}
+
 /// Finds a solution to the given puzzle, if any.
-pub fn solve(puzzle: Puzzle) -> Option<Solution> {
+pub fn solve_any(puzzle: Puzzle) -> Option<Solution> {
     if !is_valid_puzzle(puzzle) {
         return None;
     }
@@ -21,6 +37,23 @@ pub fn solve(puzzle: Puzzle) -> Option<Solution> {
     find_solution(puzzle, 0, &blanks)
 }
 
+/// Verifies whether a puzzle has exactly one solution.
+pub fn has_unique_solution(puzzle: Puzzle) -> bool {
+    if !is_valid_puzzle(puzzle) {
+        return false;
+    }
+
+    let blanks = blanks(puzzle);
+    if blanks.is_empty() {
+        return true;
+    }
+
+    let mut count_cache = 0;
+    count_solutions(puzzle, 0, &blanks, &mut count_cache);
+    count_cache == 1
+}
+
+/// Verifies whether a puzzle is valid -- all digits are in legal positions.
 fn is_valid_puzzle(puzzle: Puzzle) -> bool {
     (0..9).all(|index| {
         slice_has_unique_digits(horizontal_slice(puzzle, index))
@@ -29,7 +62,7 @@ fn is_valid_puzzle(puzzle: Puzzle) -> bool {
     })
 }
 
-/// Checks that a slice has all unique digits, except 0, which is ignored.
+/// Verifies whether a slice has all unique digits, except 0, which is ignored.
 fn slice_has_unique_digits(slice: [u8; 9]) -> bool {
     let mut unique_digits = [false; 9];
 
@@ -233,6 +266,59 @@ fn find_solution(mut puzzle: Puzzle, blank: usize, blanks: &[GridPos]) -> Option
     }
 
     None
+}
+
+/// Finds all [Solution]s to a [Puzzle].
+fn find_solutions(
+    mut puzzle: Puzzle,
+    blank: usize,
+    blanks: &[GridPos],
+    solutions: &mut Vec<Solution>,
+) {
+    if blank == blanks.len() {
+        solutions.push(puzzle);
+
+        return;
+    }
+
+    let (row, col) = blanks[blank];
+
+    for digit in 1..=9 {
+        puzzle[row][col] = digit;
+
+        if !is_valid_puzzle(puzzle) {
+            continue;
+        }
+
+        find_solutions(puzzle, blank + 1, blanks, solutions);
+    }
+}
+
+/// Checks whether a [Puzzle] has 0, 1 or 2 or more [Solution]s.
+///
+/// Returns the number of solutions (0, 1, or 2) in count_cache. If the puzzle has two or more
+/// solutions, count_cache will be 2. count_cache must be initialized as 0 by the caller.
+fn count_solutions(mut puzzle: Puzzle, blank: usize, blanks: &[GridPos], count_cache: &mut u8) {
+    if blank == blanks.len() {
+        *count_cache += 1;
+
+        return;
+    }
+
+    let (row, col) = blanks[blank];
+
+    for digit in 1..=9 {
+        puzzle[row][col] = digit;
+
+        if !is_valid_puzzle(puzzle) {
+            continue;
+        }
+
+        count_solutions(puzzle, blank + 1, blanks, count_cache);
+        if *count_cache > 1 {
+            return;
+        }
+    }
 }
 
 #[cfg(test)]
